@@ -165,7 +165,7 @@ export default function StackRouter(options: StackRouterOptions) {
       };
     },
 
-    getStateForAction(state, action) {
+    getStateForAction(state, action, options) {
       switch (action.type) {
         case 'PUSH':
           if (state.routeNames.includes(action.payload.name)) {
@@ -211,10 +211,14 @@ export default function StackRouter(options: StackRouterOptions) {
         }
 
         case 'POP_TO_TOP':
-          return router.getStateForAction(state, {
-            type: 'POP',
-            payload: { count: state.routes.length - 1 },
-          });
+          return router.getStateForAction(
+            state,
+            {
+              type: 'POP',
+              payload: { count: state.routes.length - 1 },
+            },
+            options
+          );
 
         case 'NAVIGATE':
           if (
@@ -253,14 +257,18 @@ export default function StackRouter(options: StackRouterOptions) {
             }
 
             if (index === -1 && action.payload.name !== undefined) {
-              return router.getStateForAction(state, {
-                type: 'PUSH',
-                payload: {
-                  key: action.payload.key,
-                  name: action.payload.name,
-                  params: action.payload.params,
+              return router.getStateForAction(
+                state,
+                {
+                  type: 'PUSH',
+                  payload: {
+                    key: action.payload.key,
+                    name: action.payload.name,
+                    params: action.payload.params,
+                  },
                 },
-              });
+                options
+              );
             }
 
             return {
@@ -285,12 +293,16 @@ export default function StackRouter(options: StackRouterOptions) {
 
         case 'GO_BACK':
           if (state.index > 0) {
-            return router.getStateForAction(state, {
-              type: 'POP',
-              payload: { count: 1 },
-              target: action.target,
-              source: action.source,
-            });
+            return router.getStateForAction(
+              state,
+              {
+                type: 'POP',
+                payload: { count: 1 },
+                target: action.target,
+                source: action.source,
+              },
+              options
+            );
           }
 
           return null;
