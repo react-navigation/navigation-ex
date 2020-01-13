@@ -4,7 +4,8 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "example"
+      "example",
+      "web-server-example"
     ]
   },
   "publishConfig": {
@@ -20,7 +21,8 @@
     "lint": "eslint --ext '.js,.ts,.tsx' .",
     "typescript": "tsc --noEmit",
     "test": "jest",
-    "example": "yarn --cwd example"
+    "example": "yarn --cwd example",
+    "server-example": "yarn --cwd web-server-example"
   },
   "devDependencies": {
     "@babel/plugin-proposal-class-properties": "^7.7.0",
