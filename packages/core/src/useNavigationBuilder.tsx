@@ -36,6 +36,7 @@ type NavigatorRoute = {
   params?: {
     screen?: string;
     params?: object;
+    action?: NavigationAction;
   };
 };
 
@@ -106,6 +107,15 @@ export default function useNavigationBuilder<
   const route = React.useContext(NavigationRouteContext) as
     | NavigatorRoute
     | undefined;
+
+  if (
+    route?.params?.action !== undefined &&
+    typeof route?.params?.screen === 'string'
+  ) {
+    throw new Error(
+      "Specifying both 'screen' and 'action' is not supported. You can only specify a screen to navigate or a custom action to dispatch."
+    );
+  }
 
   const previousRouteRef = React.useRef(route);
 
@@ -196,7 +206,7 @@ export default function useNavigationBuilder<
     // We also need to re-initialize it if the state passed from parent was changed (maybe due to reset)
     // Otherwise assume that the state was provided as initial state
     // So we need to rehydrate it to make it usable
-    initializedStateRef.current =
+    let initializedState =
       currentState === undefined || !isStateValid(currentState)
         ? router.getInitialState({
             routeNames,
@@ -206,6 +216,26 @@ export default function useNavigationBuilder<
             routeNames,
             routeParamList,
           });
+
+    if (route?.params?.action !== undefined) {
+      const result = router.getStateForAction(
+        initializedState,
+        route.params.action,
+        {
+          routeNames,
+          routeParamList,
+        }
+      );
+
+      if (result != null) {
+        initializedState = router.getRehydratedState(result, {
+          routeNames,
+          routeParamList,
+        });
+      }
+    }
+
+    initializedStateRef.current = initializedState;
   }
 
   React.useEffect(() => {
@@ -234,14 +264,17 @@ export default function useNavigationBuilder<
     previousRouteRef.current &&
     route &&
     route.params &&
-    typeof route.params.screen === 'string' &&
-    route.params !== previousRouteRef.current.params
+    route.params !== previousRouteRef.current.params &&
+    (typeof route.params.screen === 'string' ||
+      route.params.action !== undefined)
   ) {
     // If the route was updated with new name and/or params, we should navigate there
     // The update should be limited to current navigator only, so we call the router manually
     const updatedState = router.getStateForAction(
       state,
-      navigate(route.params.screen, route.params.params),
+      typeof route.params.screen === 'string'
+        ? navigate(route.params.screen, route.params.params)
+        : route.params.action,
       {
         routeNames,
         routeParamList,

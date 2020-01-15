@@ -6,6 +6,7 @@ import useNavigationBuilder from '../useNavigationBuilder';
 import useNavigation from '../useNavigation';
 import MockRouter, { MockRouterKey } from './__fixtures__/MockRouter';
 import { NavigationState, NavigationContainerRef } from '../types';
+import { navigate } from '../CommonActions';
 
 beforeEach(() => (MockRouterKey.current = 0));
 
@@ -734,6 +735,155 @@ it('navigates to nested child in a navigator', () => {
   expect(element).toMatchInlineSnapshot(
     `"[bar-a, {\\"lol\\":\\"why\\",\\"whoa\\":\\"test\\"}]"`
   );
+});
+
+it('handles action in nested child in a navigator', () => {
+  const TestNavigator = (props: any): any => {
+    const { state, descriptors } = useNavigationBuilder(MockRouter, props);
+
+    return descriptors[state.routes[state.index].key].render();
+  };
+
+  const TestComponent = ({ route }: any): any =>
+    `[${route.name}, ${JSON.stringify(route.params)}]`;
+
+  const onStateChange = jest.fn();
+
+  const navigation = React.createRef<NavigationContainerRef>();
+
+  const element = render(
+    <NavigationContainer ref={navigation} onStateChange={onStateChange}>
+      <TestNavigator>
+        <Screen name="foo">
+          {() => (
+            <TestNavigator>
+              <Screen name="foo-a" component={TestComponent} />
+              <Screen name="foo-b" component={TestComponent} />
+            </TestNavigator>
+          )}
+        </Screen>
+        <Screen name="bar">
+          {() => (
+            <TestNavigator initialRouteName="bar-a">
+              <Screen
+                name="bar-a"
+                component={TestComponent}
+                initialParams={{ lol: 'why' }}
+              />
+              <Screen
+                name="bar-b"
+                component={TestComponent}
+                initialParams={{ some: 'stuff' }}
+              />
+            </TestNavigator>
+          )}
+        </Screen>
+      </TestNavigator>
+    </NavigationContainer>
+  );
+
+  expect(element).toMatchInlineSnapshot(`"[foo-a, undefined]"`);
+
+  act(
+    () =>
+      navigation.current &&
+      navigation.current.navigate('bar', {
+        action: navigate('bar-b'),
+      })
+  );
+
+  expect(element).toMatchInlineSnapshot(`"[bar-b, {\\"some\\":\\"stuff\\"}]"`);
+
+  act(
+    () =>
+      navigation.current &&
+      navigation.current.navigate('bar', {
+        action: navigate('bar-a'),
+      })
+  );
+
+  expect(element).toMatchInlineSnapshot(`"[bar-a, {\\"lol\\":\\"why\\"}]"`);
+});
+
+it('navigates to nested screen in a navigator with initial params', () => {
+  const TestNavigator = (props: any): any => {
+    const { state, descriptors } = useNavigationBuilder(MockRouter, props);
+
+    return descriptors[state.routes[state.index].key].render();
+  };
+
+  const TestComponent = ({ route }: any): any =>
+    `[${route.name}, ${JSON.stringify(route.params)}]`;
+
+  const navigation = React.createRef<NavigationContainerRef>();
+
+  const element = render(
+    <NavigationContainer ref={navigation}>
+      <TestNavigator>
+        <Screen
+          name="bar"
+          initialParams={{ screen: 'bar-b', params: { answer: 42 } }}
+        >
+          {() => (
+            <TestNavigator initialRouteName="bar-a">
+              <Screen
+                name="bar-a"
+                component={TestComponent}
+                initialParams={{ lol: 'why' }}
+              />
+              <Screen
+                name="bar-b"
+                component={TestComponent}
+                initialParams={{ some: 'stuff' }}
+              />
+            </TestNavigator>
+          )}
+        </Screen>
+      </TestNavigator>
+    </NavigationContainer>
+  );
+
+  expect(element).toMatchInlineSnapshot(
+    `"[bar-b, {\\"some\\":\\"stuff\\",\\"answer\\":42}]"`
+  );
+});
+
+it('handles action in nested screen in a navigator with initial params', () => {
+  const TestNavigator = (props: any): any => {
+    const { state, descriptors } = useNavigationBuilder(MockRouter, props);
+
+    return descriptors[state.routes[state.index].key].render();
+  };
+
+  const TestComponent = ({ route }: any): any =>
+    `[${route.name}, ${JSON.stringify(route.params)}]`;
+
+  const navigation = React.createRef<NavigationContainerRef>();
+
+  const element = render(
+    <NavigationContainer ref={navigation}>
+      <TestNavigator>
+        <Screen name="bar" initialParams={{ action: navigate('bar-b') }}>
+          {() => (
+            <TestNavigator initialRouteName="bar-a">
+              <Screen
+                name="bar-a"
+                component={TestComponent}
+                initialParams={{ lol: 'why' }}
+              />
+              <Screen
+                name="bar-b"
+                component={TestComponent}
+                initialParams={{ some: 'stuff' }}
+              />
+            </TestNavigator>
+          )}
+        </Screen>
+      </TestNavigator>
+    </NavigationContainer>
+  );
+
+  expect(element).toMatchInlineSnapshot(`"[bar-b, {\\"some\\":\\"stuff\\"}]"`);
 });
 
 it('gives access to internal state', () => {
