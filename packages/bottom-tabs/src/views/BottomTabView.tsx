@@ -8,13 +8,15 @@ import { ScreenContainer } from 'react-native-screens';
 
 import SafeAreaProviderCompat from './SafeAreaProviderCompat';
 import ResourceSavingScene from './ResourceSavingScene';
-import BottomTabBar from './BottomTabBar';
+import BottomTabBar, { getDefaultTabBarHeight } from './BottomTabBar';
 import {
   BottomTabNavigationConfig,
   BottomTabDescriptorMap,
   BottomTabNavigationHelpers,
   BottomTabBarProps,
 } from '../types';
+import { SafeAreaConsumer, EdgeInsets } from 'react-native-safe-area-context';
+import TabBarHeightContext from '../utils/TabBarHeightContext';
 
 type Props = BottomTabNavigationConfig & {
   state: TabNavigationState;
@@ -92,41 +94,63 @@ export default class BottomTabView extends React.Component<Props, State> {
   };
 
   render() {
-    const { state, descriptors, lazy, unmountInactiveScreens } = this.props;
+    const {
+      state,
+      descriptors,
+      lazy,
+      unmountInactiveScreens,
+      tabBarOptions,
+    } = this.props;
     const { routes } = state;
     const { loaded } = this.state;
 
     return (
       <SafeAreaProviderCompat>
-        <View style={styles.container}>
-          <ScreenContainer style={styles.pages}>
-            {routes.map((route, index) => {
-              if (unmountInactiveScreens && index !== state.index) {
-                return null;
-              }
+        <SafeAreaConsumer>
+          {insets => {
+            const {
+              height: tabBarHeight = getDefaultTabBarHeight(
+                insets as EdgeInsets
+              ),
+            } = tabBarOptions?.tabStyle
+              ? StyleSheet.flatten(tabBarOptions?.tabStyle)
+              : {};
 
-              if (lazy && !loaded.includes(index)) {
-                // Don't render a screen if we've never navigated to it
-                return null;
-              }
+            return (
+              <View style={styles.container}>
+                <ScreenContainer style={styles.pages}>
+                  {routes.map((route, index) => {
+                    if (unmountInactiveScreens && index !== state.index) {
+                      return null;
+                    }
 
-              const isFocused = state.index === index;
+                    if (lazy && !loaded.includes(index)) {
+                      // Don't render a screen if we've never navigated to it
+                      return null;
+                    }
 
-              return (
-                <ResourceSavingScene
-                  key={route.key}
-                  style={StyleSheet.absoluteFill}
-                  isVisible={isFocused}
-                >
-                  <SceneContent isFocused={isFocused}>
-                    {descriptors[route.key].render()}
-                  </SceneContent>
-                </ResourceSavingScene>
-              );
-            })}
-          </ScreenContainer>
-          {this.renderTabBar()}
-        </View>
+                    const isFocused = state.index === index;
+
+                    return (
+                      <ResourceSavingScene
+                        key={route.key}
+                        style={StyleSheet.absoluteFill}
+                        isVisible={isFocused}
+                      >
+                        <SceneContent isFocused={isFocused}>
+                          <TabBarHeightContext.Provider value={tabBarHeight}>
+                            {descriptors[route.key].render()}
+                          </TabBarHeightContext.Provider>
+                        </SceneContent>
+                      </ResourceSavingScene>
+                    );
+                  })}
+                </ScreenContainer>
+                {this.renderTabBar()}
+              </View>
+            );
+          }}
+        </SafeAreaConsumer>
       </SafeAreaProviderCompat>
     );
   }

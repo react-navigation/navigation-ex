@@ -4,6 +4,7 @@ import {
   StyleProp,
   TextStyle,
   ViewStyle,
+  LayoutChangeEvent,
 } from 'react-native';
 import {
   NavigationHelpers,
