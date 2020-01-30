@@ -41,7 +41,8 @@
     "jest": "^24.9.0",
     "lerna": "^3.20.2",
     "prettier": "^1.19.1",
-    "typescript": "^3.7.4"
+    "typescript": "^3.7.4",
+    "file-system": "^2.2.2"
   },
   "resolutions": {
     "react": "~16.9.0",
