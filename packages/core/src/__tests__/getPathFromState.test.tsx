@@ -489,3 +489,82 @@ it('handles empty path at the end', () => {
   expect(getPathFromState(state, config)).toBe(path);
   expect(getPathFromState(getStateFromPath(path, config), config)).toBe(path);
 });
+
+it('handles no path property in config', () => {
+  const path = '/Foo/Bar/baz';
+  const config = {
+    Foo: {
+      path: 'foo',
+      screens: {
+        Bar: {},
+      },
+    },
+    Baz: { path: 'baz' },
+  };
+
+  const state = {
+    routes: [
+      {
+        name: 'Foo',
+        state: {
+          routes: [
+            {
+              name: 'Bar',
+              state: {
+                routes: [{ name: 'Baz' }],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  expect(getPathFromState(state, config)).toBe(path);
+  expect(getPathFromState(getStateFromPath(path, config), config)).toBe(path);
+});
+
+it('handles no path property in config with params', () => {
+  const path = '/bar/Baz?answer=42&count=10&valid=true';
+  const config = {
+    Foo: {
+      path: 'foo',
+      screens: {
+        Bar: {
+          path: 'bar',
+        },
+      },
+    },
+    Baz: {},
+  };
+
+  const state = {
+    routes: [
+      {
+        name: 'Foo',
+        state: {
+          routes: [
+            {
+              name: 'Bar',
+              state: {
+                routes: [
+                  {
+                    name: 'Baz',
+                    params: {
+                      count: 10,
+                      answer: '42',
+                      valid: true,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        },
+      },
+    ],
+  };
+
+  expect(getPathFromState(state, config)).toBe(path);
+  expect(getPathFromState(getStateFromPath(path, config), config)).toBe(path);
+});

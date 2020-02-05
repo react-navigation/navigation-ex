@@ -60,6 +60,9 @@ export default function getPathFromState(
     };
     let currentOptions = options;
     let pattern = route.name;
+    // we keep the names of routes and add them as pattern if
+    // the route on the last nesting level has no `path` property
+    let rawPattern = route.name;
 
     while (route.name in currentOptions) {
       if (typeof currentOptions[route.name] === 'string') {
@@ -89,6 +92,7 @@ export default function getPathFromState(
             // if there is config for next route name, we go deeper
             if (nextRoute.name in deeperConfig) {
               route = nextRoute as Route<string> & { state?: State };
+              rawPattern = `${rawPattern}/${route.name}`;
               currentOptions = deeperConfig;
             } else {
               // if not, there is no sense in going deeper in config
@@ -98,6 +102,10 @@ export default function getPathFromState(
           }
         }
       }
+    }
+
+    if (pattern === undefined) {
+      pattern = rawPattern;
     }
 
     // we don't add empty path strings to path
