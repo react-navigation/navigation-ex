@@ -1,5 +1,7 @@
 # React Navigation 5
 
+THIS REPO IS ARCHIVED AND CODE HAS BEEN MOVED TO THE [MAIN REPOSIORY](https://github.com/react-navigation/react-navigation)
+
 [![Build Status][build-badge]][build]
 [![Code Coverage][coverage-badge]][coverage]
 [![MIT License][license-badge]][license]
